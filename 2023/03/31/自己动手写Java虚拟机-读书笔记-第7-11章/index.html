@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>&lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="第7章　方法调用和返回    本章主要讨论的问题有实现方法调用，实现方法传参，实现方法返回，PC值的变化。如果对第5章和第6章熟悉的话，本章内容很容易理解。 以A方法调用B方法为例说明以上4个问题。 方法调用指令实现是初始化一个栈帧（B栈帧）然后把栈帧压入栈中，栈顶执行新栈帧。  传参的实现是在A方法调用B方法之前，参数压入A栈帧的操作数栈中，执行调用指令时，A栈帧操作数栈中数据出栈，存入B栈帧的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="&lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章">
+<meta property="og:url" content="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="第7章　方法调用和返回    本章主要讨论的问题有实现方法调用，实现方法传参，实现方法返回，PC值的变化。如果对第5章和第6章熟悉的话，本章内容很容易理解。 以A方法调用B方法为例说明以上4个问题。 方法调用指令实现是初始化一个栈帧（B栈帧）然后把栈帧压入栈中，栈顶执行新栈帧。  传参的实现是在A方法调用B方法之前，参数压入A栈帧的操作数栈中，执行调用指令时，A栈帧操作数栈中数据出栈，存入B栈帧的">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/%5Cimages%5Cpasted-16.png">
+<meta property="og:image" content="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/%5Cimages%5Cpasted-17.png">
+<meta property="article:published_time" content="2023-03-31T06:21:00.000Z">
+<meta property="article:modified_time" content="2023-03-31T06:23:01.199Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="jvm">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/%5Cimages%5Cpasted-16.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-自己动手写Java虚拟机-读书笔记-第7-11章" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/" class="article-date">
+  <time datetime="2023-03-31T06:21:00.000Z" itemprop="datePublished">2023-03-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      &lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>第7章　方法调用和返回  </p>
+<ul>
+<li>本章主要讨论的问题有实现方法调用，实现方法传参，实现方法返回，PC值的变化。如果对第5章和第6章熟悉的话，本章内容很容易理解。</li>
+<li>以A方法调用B方法为例说明以上4个问题。</li>
+<li>方法调用指令实现是初始化一个栈帧（B栈帧）然后把栈帧压入栈中，栈顶执行新栈帧。</li>
+<li> 传参的实现是在A方法调用B方法之前，参数压入A栈帧的操作数栈中，执行调用指令时，A栈帧操作数栈中数据出栈，存入B栈帧的本地变量表中。</li>
+<li>方法的返回实现是，B栈帧中操作数栈剩下最后一个数为B方法的返回值，返回值压入A栈帧中，栈顶弹出B栈帧，指向A栈帧。</li>
+<li> 在调用方法过程中，PC值会变化，这个问题书中并未详细介绍，可能是作者认为该问题不太重要。由于我比较好奇，所以研究了pc指向值的实现。每个栈帧对象存了一个nextPC的变量，新建栈帧nextPC为0，所以不同栈帧的nextPC值是单独存储的。每次执行指令前都会从当前栈帧中获取nextPC作为新的pc值。</li>
+</ul>
+<p><img src="%5Cimages%5Cpasted-16.png" alt="upload successful"></p>
+<p>第8章　数组和字符串  </p>
+<ul>
+<li>本章主要讨论数组和字符串的实现。数组可以看作是一种特殊的类，数组中的值为数组元素，对应类的实例变量。String类有两个实例变量，其中一个是value，类型是字符数组，用于存放UTF16编码后的字符序列。另一个是hash，缓存计字符串的哈希码。</li>
+</ul>
+<p>第9章　本地方法调用  </p>
+<ul>
+<li>一些无法用Java语言实现的方法需要使用本地语言编写，这些方法叫作本地方法。主要讨论反射的实现和String相关本地方法。</li>
+</ul>
+<p>第10章　异常处理  </p>
+<ul>
+<li> 本章主要讨论athrow指令和方法的异常处理表。</li>
+<li>异常处理是通过try-catch句实现的，参考Java虚拟机规范的3.12节，里面有一个例子，代码如下：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">catchOne</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    tryItOut();</span><br><span class="line">  &#125; <span class="keyword">catch</span> (TestExc e) &#123;</span><br><span class="line">    handleExc(e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+上面的方法编译之后，产生下面的字节码：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1  aload_0        // 把局部变量0(this)推入操作数栈顶</span><br><span class="line">2  invokevirtual #4    // 调用tryItOut()方法</span><br><span class="line">4  goto 13        // 如果try&#123;&#125;没有抛出异常， 直接执行return指令</span><br><span class="line">7  astore_1        // 否则， 异常对象引用在操作数栈顶， 把它弹出， 并放入局部变量1</span><br><span class="line">8  aload_0        // 把this推入栈顶(将作为handleExc()方法的参数0)</span><br><span class="line">9  aload_1        // 把异常对象引用推入栈顶(将作为handleExc()方法的参数1)</span><br><span class="line">10  invokevirtual #5    // 调用handleExc()方法</span><br><span class="line">13  return            // 方法返回</span><br></pre></td></tr></table></figure>
+从字节码来看，如果没有异常抛出，则会直接goto到return指令，方法正常返回。那么如果有异常抛出，goto和return之间的指令是如何执行的呢？答案是查找方法的异常处理表。异常处理表是Code属性的一部分，它记录了方法是否有能力处理某种异常。<br>回到catchOne（）方法，它的异常处理表只有如下一项：</li>
+</ul>
+<p><img src="%5Cimages%5Cpasted-17.png" alt="upload successful"><br>当tryItOut（）方法通过athrow指令抛出TestExc异常时，Java虚拟机首先会查找tryItOut（）方法的异常处理表，看它能否处理该异常。如果能，则跳转到相应的字节码开始异常处理。假设tryItOut（）方法无法处理异常，Java虚拟机会进一步查看它的调用者，也就是catchOne（）方法的异常处理表。catchOne（）方法刚好可以处理TestExc异常，使catch{}块得以执行。<br>如果遍历完Java虚拟机栈还是找不到异常处理代码，则handleUncaughtException（）函数打印出Java虚拟机栈信息。<br>Java class文件中有个LineNumberTable属性，存在于Code属性中， 它建立了字节码偏移量到源代码行号之间的联系。所以当指令执行抛出异常时可以打印出所有栈帧对应代码的行数。<br>第11章　结束  </p>
+<ul>
+<li>主要讨论了System类的实现</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/" data-id="clfw5s3o70006vswgbk6302ou" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC-6-%E7%AB%A0/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">&lt;自己动手写 Java 虚拟机&gt; 读书笔记 第 6 章</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rpc/" rel="tag">rpc</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/jvm/" style="font-size: 20px;">jvm</a> <a href="/tags/rpc/" style="font-size: 10px;">rpc</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC-6-%E7%AB%A0/">&lt;自己动手写 Java 虚拟机&gt; 读书笔记 第 6 章</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC5%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第5章</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC1-4%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第1-4章</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/31/%E7%AE%80%E6%98%93-rpc-%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%B8%89%EF%BC%89-%E4%BD%BF%E7%94%A8-netty-%E5%A4%84%E7%90%86%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82/">简易 rpc 实现（三）- 使用 netty 处理网络请求</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2023 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

@@ -64,10 +64,334 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-自己动手写Java虚拟机-读书笔记-第7-11章" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/" class="article-date">
+  <time datetime="2023-03-31T06:21:00.000Z" itemprop="datePublished">2023-03-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>第7章　方法调用和返回  </p>
+<ul>
+<li>本章主要讨论的问题有实现方法调用，实现方法传参，实现方法返回，PC值的变化。如果对第5章和第6章熟悉的话，本章内容很容易理解。</li>
+<li>以A方法调用B方法为例说明以上4个问题。</li>
+<li>方法调用指令实现是初始化一个栈帧（B栈帧）然后把栈帧压入栈中，栈顶执行新栈帧。</li>
+<li> 传参的实现是在A方法调用B方法之前，参数压入A栈帧的操作数栈中，执行调用指令时，A栈帧操作数栈中数据出栈，存入B栈帧的本地变量表中。</li>
+<li>方法的返回实现是，B栈帧中操作数栈剩下最后一个数为B方法的返回值，返回值压入A栈帧中，栈顶弹出B栈帧，指向A栈帧。</li>
+<li> 在调用方法过程中，PC值会变化，这个问题书中并未详细介绍，可能是作者认为该问题不太重要。由于我比较好奇，所以研究了pc指向值的实现。每个栈帧对象存了一个nextPC的变量，新建栈帧nextPC为0，所以不同栈帧的nextPC值是单独存储的。每次执行指令前都会从当前栈帧中获取nextPC作为新的pc值。</li>
+</ul>
+<p><img src="%5Cimages%5Cpasted-16.png" alt="upload successful"></p>
+<p>第8章　数组和字符串  </p>
+<ul>
+<li>本章主要讨论数组和字符串的实现。数组可以看作是一种特殊的类，数组中的值为数组元素，对应类的实例变量。String类有两个实例变量，其中一个是value，类型是字符数组，用于存放UTF16编码后的字符序列。另一个是hash，缓存计字符串的哈希码。</li>
+</ul>
+<p>第9章　本地方法调用  </p>
+<ul>
+<li>一些无法用Java语言实现的方法需要使用本地语言编写，这些方法叫作本地方法。主要讨论反射的实现和String相关本地方法。</li>
+</ul>
+<p>第10章　异常处理  </p>
+<ul>
+<li> 本章主要讨论athrow指令和方法的异常处理表。</li>
+<li>异常处理是通过try-catch句实现的，参考Java虚拟机规范的3.12节，里面有一个例子，代码如下：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">catchOne</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    tryItOut();</span><br><span class="line">  &#125; <span class="keyword">catch</span> (TestExc e) &#123;</span><br><span class="line">    handleExc(e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+上面的方法编译之后，产生下面的字节码：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1  aload_0        // 把局部变量0(this)推入操作数栈顶</span><br><span class="line">2  invokevirtual #4    // 调用tryItOut()方法</span><br><span class="line">4  goto 13        // 如果try&#123;&#125;没有抛出异常， 直接执行return指令</span><br><span class="line">7  astore_1        // 否则， 异常对象引用在操作数栈顶， 把它弹出， 并放入局部变量1</span><br><span class="line">8  aload_0        // 把this推入栈顶(将作为handleExc()方法的参数0)</span><br><span class="line">9  aload_1        // 把异常对象引用推入栈顶(将作为handleExc()方法的参数1)</span><br><span class="line">10  invokevirtual #5    // 调用handleExc()方法</span><br><span class="line">13  return            // 方法返回</span><br></pre></td></tr></table></figure>
+从字节码来看，如果没有异常抛出，则会直接goto到return指令，方法正常返回。那么如果有异常抛出，goto和return之间的指令是如何执行的呢？答案是查找方法的异常处理表。异常处理表是Code属性的一部分，它记录了方法是否有能力处理某种异常。<br>回到catchOne（）方法，它的异常处理表只有如下一项：</li>
+</ul>
+<p><img src="%5Cimages%5Cpasted-17.png" alt="upload successful"><br>当tryItOut（）方法通过athrow指令抛出TestExc异常时，Java虚拟机首先会查找tryItOut（）方法的异常处理表，看它能否处理该异常。如果能，则跳转到相应的字节码开始异常处理。假设tryItOut（）方法无法处理异常，Java虚拟机会进一步查看它的调用者，也就是catchOne（）方法的异常处理表。catchOne（）方法刚好可以处理TestExc异常，使catch{}块得以执行。<br>如果遍历完Java虚拟机栈还是找不到异常处理代码，则handleUncaughtException（）函数打印出Java虚拟机栈信息。<br>Java class文件中有个LineNumberTable属性，存在于Code属性中， 它建立了字节码偏移量到源代码行号之间的联系。所以当指令执行抛出异常时可以打印出所有栈帧对应代码的行数。<br>第11章　结束  </p>
+<ul>
+<li>主要讨论了System类的实现</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/" data-id="clfw5s3o70006vswgbk6302ou" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-自己动手写-Java-虚拟机-读书笔记-第-6-章" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC-6-%E7%AB%A0/" class="article-date">
+  <time datetime="2023-03-31T06:18:00.000Z" itemprop="datePublished">2023-03-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC-6-%E7%AB%A0/">&lt;自己动手写 Java 虚拟机&gt; 读书笔记 第 6 章</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>第6章　类和对象</p>
+<p>本章主要讲解了执行引擎实现类和对象的原理，详细说明了虚拟机加载类和创建对象的详细步骤。</p>
+<p>加载类步骤</p>
+<p>1.从命令行或配置中获取main函数所在的类，解析该类信息解析，获取父类信息并将父类信息存储在classload的classMap中（如果父类还有父类则循环加载父类的父类），key为类名，vlaue为类对象。直到所有关联的父类被全部存入classMap。相关代码ch06/rtda/heap/class_loader.go:26</p>
+<p>书中例子 jvmgo.book.ch06.MyObject 被加载后classMap中存储为</p>
+<p><img src="%5Cimages%5Cpasted-6.png" alt="upload successful"></p>
+<p>2.link链接</p>
+<p>类加载后执行链接，书中未实现验证功能，只实现了准备功能。相关代码 ch06/rtda/heap/class_loader.go:86</p>
+<p>准备功能主要是计算类的实例变量和静态变量需要占用的slot数，并初始化静态变量。书中jvmgo/book/ch06/MyObject链接后instanceSlotCount（实例变量占用slot计数）和staticSlotCount（静态变量占用slot计数）如截图</p>
+<p><img src="%5Cimages%5Cpasted-7.png" alt="upload successful"></p>
+<p>jvmgo/book/ch06/MyObject的Java源代码为</p>
+<p><img src="%5Cimages%5Cpasted-8.png" alt="upload successful"></p>
+<p>3.解析，解析是指将常量池内的符号引用解析成为直接引用。 加载类首先将类中的常量池信息转为运行时常量池相关代码ch06/rtda/heap/constant_pool.go:13</p>
+<p>当用到常量池中的引用时，符号引用转为直接引用ch06/rtda/heap/cp_symref.go:18</p>
+<p>以jvmgo/book/ch06/MyObject在常量池的引用为例</p>
+<p>在加载类的过程中调用ch06/rtda/heap/constant_pool.go的newConstantPool方法创建运行时常量池，运行时常量池存储内容和类文件中对应。</p>
+<p><img src="%5Cimages%5Cpasted-9.png" alt="upload successful"></p>
+<p>常量池信息中下标为3的数据存储jvmgo/book/ch06/MyObject类的引用。程序中运行常量池数组下标为3的数据同样存储jvmgo/book/ch06/MyObject类的引用，此时存储的是符号引用，还未指向MyObject类在内存中具体地址。如下图cp.consts[3].class指向nil</p>
+<p><img src="%5Cimages%5Cpasted-10.png" alt="upload successful"></p>
+<p>当程序要引用jvmgo/book/ch06/MyObject时，会判断class是否为空，如果为空则尝试在classMap获取class的直接引用，如果classMap中没有则尝试加载，如果加载不到则报错。</p>
+<p>1.判断class是否为空</p>
+<p><img src="%5Cimages%5Cpasted-11.png" alt="upload successful"></p>
+<p>2.在classMap中查找</p>
+<p><img src="%5Cimages%5Cpasted-12.png" alt="upload successful"></p>
+<p><img src="%5Cimages%5Cpasted-13.png" alt="upload successful"></p>
+<p>3.classMap中没有则尝试加载，如上图第32行代码。</p>
+<p>new指令的实现:new指令后面的操作数是常量池数据下标，书中例子值为3，对应jvmgo/book/ch06/MyObject类。</p>
+<p><img src="%5Cimages%5Cpasted-14.png" alt="upload successful"></p>
+<p>程序解析获得jvmgo/book/ch06/MyObject类的直接引用后调用NewObject方法（代码：ch06/rtda/heap/class.go:97）。NewObject方法创建一个Object对象，Object对象存储实例数据和Class引用。</p>
+<p><img src="%5Cimages%5Cpasted-15.png" alt="upload successful"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC-6-%E7%AB%A0/" data-id="clfw5s3o40002vswge6i6889b" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-自己动手写Java虚拟机-读书笔记-第5章" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC5%E7%AB%A0/" class="article-date">
+  <time datetime="2023-03-31T06:08:00.000Z" itemprop="datePublished">2023-03-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC5%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第5章</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>第5章　指令集和解释器</p>
+<p>    本章主要讲解了执行引擎执行指令的具体步骤和原理，结合了第三章和第四章的内容，是全书最重要的章节。执行引擎执行指令的具体步骤分为</p>
+<p>1.找到main方法入口。</p>
+<p>2.初始化线程对象，栈，栈帧。</p>
+<p>3.将栈帧压入栈中。</p>
+<p>4.将栈帧从栈中弹出，读取code数据，开始执行指令。</p>
+<p>5.根据不同的指令操作本地变量和操作数栈直到指令完全结束。</p>
+<p>    1.找到main方法入口。代码位置 ch05/main.go:46</p>
+<p><img src="%5Cimages%5Cpasted-1.png" alt="upload successful"></p>
+<p>    2.初始化线程对象，栈，栈帧。3.将栈帧压入栈中。代码位置 ch05/interpreter.go:9</p>
+<p><img src="%5Cimages%5Cpasted-2.png" alt="upload successful"></p>
+<p>4.将栈帧从栈中弹出，读取code数据，开始执行指令。5.根据不同的指令操作本地变量和操作数栈直到指令完全结束。 代码位置 ch05/interpreter.go:31</p>
+<p><img src="%5Cimages%5Cpasted-3.png" alt="upload successful"></p>
+<p>执行指令步骤：1、获取pc指向的数据，将数据转为操作码，如上图第41行代码。2、根据不同的操作码获取操作数，如上图第43行。3、执行指令方法。4、执行指令后更新pc值，重复1操作。</p>
+<p>以书中例子为例</p>
+<p><img src="%5Cimages%5Cpasted-4.png" alt="upload successful"></p>
+<p>pc指向的数据对应操作码为ICONST_0，操作数为0位，指令操作为将0push到操作数栈中。</p>
+<p><img src="%5Cimages%5Cpasted-5.png" alt="upload successful"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC5%E7%AB%A0/" data-id="clfw5s3o50004vswgb7voh32a" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-自己动手写Java虚拟机-读书笔记-第1-4章" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC1-4%E7%AB%A0/" class="article-date">
+  <time datetime="2023-03-31T06:07:00.000Z" itemprop="datePublished">2023-03-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC1-4%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第1-4章</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>书籍豆瓣链接 <a target="_blank" rel="noopener" href="https://book.douban.com/subject/26802084/">https://book.douban.com/subject/26802084/</a></p>
+<p>源码链接  <a target="_blank" rel="noopener" href="https://github.com/zxh0/jvmgo-book">https://github.com/zxh0/jvmgo-book</a></p>
+<p>作者写的查看class文件结构体工具 <a target="_blank" rel="noopener" href="https://github.com/zxh0/classpy/releases">https://github.com/zxh0/classpy/releases</a></p>
+<p>学习本书需要的前置知识，需要熟悉Java语言语法，Java虚拟机内存模型，了解go语言语言。</p>
+<p>学习本书可以理解Java虚拟机的运行原理，理解部分编译原理，理解部分cpu运行原理。</p>
+<p>第1章　命令行工具</p>
+<p>    本章主要讲解编写Java命令行工具，内容比较简单。</p>
+<p>第2章　搜索class文件</p>
+<p>    本章主要讲解编写Java虚拟机加载class文件，内容比较简单。</p>
+<p>第3章　解析class文件</p>
+<p>    本章主要讲解按照Java class规范解析class文件，内容很多很杂，粗略过一遍即可。主要关注code属性，这里存放着虚拟机执行指令和本地变量信息。</p>
+<p>第4章　运行时数据区</p>
+<p>    本章讲解了Java虚拟机栈内存的具体构成，为下一章执行引擎执行指令操作做铺垫。栈内存是一个栈的数据结构（先进后出），栈中存储的数据是栈帧。一个栈帧表示一个方法的调用，栈帧中包含本地变量和操作数栈。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC1-4%E7%AB%A0/" data-id="clfw5s3o80007vswg6y5675ei" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-简易-rpc-实现（三）-使用-netty-处理网络请求" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/03/31/%E7%AE%80%E6%98%93-rpc-%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%B8%89%EF%BC%89-%E4%BD%BF%E7%94%A8-netty-%E5%A4%84%E7%90%86%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82/" class="article-date">
+  <time datetime="2023-03-31T06:05:00.000Z" itemprop="datePublished">2023-03-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/03/31/%E7%AE%80%E6%98%93-rpc-%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%B8%89%EF%BC%89-%E4%BD%BF%E7%94%A8-netty-%E5%A4%84%E7%90%86%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82/">简易 rpc 实现（三）- 使用 netty 处理网络请求</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在简易 rpc 实现（二）的基础上引入 netty 框架处理网络请求。</p>
+<p>增加netty依赖<br>  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">                &lt;groupId&gt;io.netty&lt;/groupId&gt;</span><br><span class="line">                &lt;artifactId&gt;netty-all&lt;/artifactId&gt;</span><br><span class="line">                &lt;version&gt;<span class="number">4.1</span><span class="number">.12</span>.Final&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure><br>定义服务接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">HelloService</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">hello</span><span class="params">(String name)</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>定义服务实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HelloServiceImpl</span> <span class="keyword">implements</span> <span class="title class_">HelloService</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">hello</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Hello &quot;</span> + name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>序列化工具类JsonUtil</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> com.fasterxml.jackson.databind.ObjectMapper;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JsonUtil</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">ObjectMapper</span> <span class="variable">objMapper</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectMapper</span>();</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>报文传输类</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RpcContent</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">serialVersionUID</span> <span class="operator">=</span> -<span class="number">2524587347775862771L</span>;</span><br><span class="line">    <span class="keyword">private</span> String requestId;</span><br><span class="line">    <span class="keyword">private</span> String className;</span><br><span class="line">    <span class="keyword">private</span> String methodName;</span><br><span class="line">    <span class="keyword">private</span> Class&lt;?&gt;[] parameterTypes;</span><br><span class="line">    <span class="keyword">private</span> Object[] parameters;</span><br><span class="line">    <span class="keyword">private</span> Object result;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>报文编码解码类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RpcDecoder</span> <span class="keyword">extends</span> <span class="title class_">ByteToMessageDecoder</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">decode</span><span class="params">(ChannelHandlerContext ctx, ByteBuf in, List&lt;Object&gt; out)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">byte</span>[] bytes = <span class="keyword">new</span> <span class="title class_">byte</span>[in.readableBytes()];</span><br><span class="line">        in.readBytes(bytes);</span><br><span class="line">        out.add(JsonUtil.objMapper.readValue(bytes, RpcContent.class));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RpcEncoder</span> <span class="keyword">extends</span> <span class="title class_">MessageToByteEncoder</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">encode</span><span class="params">(ChannelHandlerContext ctx, Object msg, ByteBuf out)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">byte</span>[] bytes = JsonUtil.objMapper.writeValueAsBytes(msg);</span><br><span class="line">        out.writeBytes(bytes);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>RpcServer服务类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RpcServer</span> &#123;</span><br><span class="line"></span><br><span class="line">    ConcurrentHashMap&lt;String,Object&gt; serviceMap =  <span class="keyword">new</span> <span class="title class_">ConcurrentHashMap</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addService</span><span class="params">(String serviceName,Object service)</span>&#123;</span><br><span class="line">        serviceMap.put(serviceName,service);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">startRpcServer</span><span class="params">(<span class="type">int</span> port)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">NioEventLoopGroup</span> <span class="variable">bossGroup</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">NioEventLoopGroup</span>();</span><br><span class="line">        <span class="type">NioEventLoopGroup</span> <span class="variable">workGroup</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">NioEventLoopGroup</span>();</span><br><span class="line"></span><br><span class="line">        <span class="type">ServerBootstrap</span> <span class="variable">server</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ServerBootstrap</span>();</span><br><span class="line">        server.group(bossGroup, workGroup).channel(NioServerSocketChannel.class)</span><br><span class="line">                .childHandler(<span class="keyword">new</span> <span class="title class_">ChannelInitializer</span>&lt;NioSocketChannel&gt;() &#123;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">initChannel</span><span class="params">(NioSocketChannel ch)</span> &#123;</span><br><span class="line">                        System.out.println(<span class="string">&quot;服务端启动中&quot;</span>);</span><br><span class="line">                        ch.pipeline().addLast(<span class="keyword">new</span> <span class="title class_">RpcDecoder</span>());</span><br><span class="line">                        ch.pipeline().addLast(<span class="keyword">new</span> <span class="title class_">RpcEncoder</span>());</span><br><span class="line">                        ch.pipeline().addLast(<span class="keyword">new</span> <span class="title class_">SimpleChannelInboundHandler</span>() &#123;</span><br><span class="line">                            <span class="meta">@Override</span></span><br><span class="line">                            <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">channelRead0</span><span class="params">(ChannelHandlerContext ctx, Object msg)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">                                <span class="type">RpcContent</span> <span class="variable">rpcContent</span> <span class="operator">=</span> (RpcContent) msg;</span><br><span class="line">                                <span class="type">Object</span> <span class="variable">service</span> <span class="operator">=</span> serviceMap.get(rpcContent.getClassName());</span><br><span class="line">                                <span class="type">String</span> <span class="variable">methodName</span> <span class="operator">=</span> rpcContent.getMethodName();</span><br><span class="line">                                Class&lt;?&gt;[] parameterTypes = rpcContent.getParameterTypes();</span><br><span class="line">                                Object[] arguments = rpcContent.getParameters();</span><br><span class="line">                                <span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> service.getClass().getMethod(methodName, parameterTypes);</span><br><span class="line">                                <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> method.invoke(service, arguments);</span><br><span class="line">                                System.out.println(<span class="string">&quot;server return &quot;</span> + result.toString());</span><br><span class="line">                                <span class="type">RpcContent</span> <span class="variable">rtn</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RpcContent</span>();</span><br><span class="line">                                rtn.setResult(result);</span><br><span class="line">                                ctx.writeAndFlush(rtn);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;);</span><br><span class="line"></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;)</span><br><span class="line">                .option(ChannelOption.SO_BACKLOG,<span class="number">1024</span>)</span><br><span class="line">                .childOption(ChannelOption.SO_KEEPALIVE,<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="type">ChannelFuture</span> <span class="variable">future</span> <span class="operator">=</span> server.bind(port).sync();</span><br><span class="line">        System.out.println(<span class="string">&quot;Server started on port &quot;</span>+port);</span><br><span class="line">        future.channel().closeFuture().sync();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>RpcProvider服务启动类</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class RpcProvider &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        HelloService service = new HelloServiceImpl();</span><br><span class="line"></span><br><span class="line">        RpcServer rpcServer = new RpcServer();</span><br><span class="line">        rpcServer.addService(HelloService.class.getName(),service);</span><br><span class="line">        rpcServer.startRpcServer(1234);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端ClientHandler类</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">public class ClientHandler extends ChannelInboundHandlerAdapter &#123;</span><br><span class="line">    ChannelHandlerContext context;</span><br><span class="line">    Object result;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelActive(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">        super.channelActive(ctx);</span><br><span class="line">        context = ctx;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public synchronized void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception &#123;</span><br><span class="line">        result = msg;</span><br><span class="line">        notify();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public synchronized Object invoke(RpcContent rpcContent) throws InterruptedException &#123;</span><br><span class="line">        context.writeAndFlush(rpcContent);</span><br><span class="line">        wait();</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端RpcClient类</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">public class RpcClient &#123;</span><br><span class="line"></span><br><span class="line">    private static ClientHandler client ;</span><br><span class="line"></span><br><span class="line">    public static  void init()&#123;</span><br><span class="line">        client = new ClientHandler();</span><br><span class="line">        NioEventLoopGroup group = new NioEventLoopGroup();</span><br><span class="line">        Bootstrap bootstrap = new Bootstrap();</span><br><span class="line">        bootstrap.group(group).channel(NioSocketChannel.class)</span><br><span class="line">                .handler(new ChannelInitializer&lt;NioSocketChannel&gt;() &#123;</span><br><span class="line">                    @Override</span><br><span class="line">                    protected void initChannel(NioSocketChannel ch) throws Exception &#123;</span><br><span class="line">                        ChannelPipeline pipeline = ch.pipeline();</span><br><span class="line">                        pipeline.addLast(new RpcEncoder());</span><br><span class="line">                        pipeline.addLast(new RpcDecoder());</span><br><span class="line">                        pipeline.addLast(client);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">        try &#123;</span><br><span class="line">            bootstrap.connect(&quot;127.0.0.1&quot;,1234).sync();</span><br><span class="line">        &#125; catch (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">        /**</span><br><span class="line">         * 引用服务</span><br><span class="line">         *</span><br><span class="line">         * @param &lt;T&gt; 接口泛型</span><br><span class="line">         * @param interfaceClass 接口类型</span><br><span class="line">         * @return 远程服务</span><br><span class="line">         * @throws Exception</span><br><span class="line">         */</span><br><span class="line">        @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">        public static  &lt;T&gt; T refer( final Class&lt;T&gt; interfaceClass)  &#123;</span><br><span class="line">            System.out.println(&quot;Get remote service &quot; + interfaceClass.getName() );</span><br><span class="line">            return (T) Proxy.newProxyInstance(interfaceClass.getClassLoader(), new Class&lt;?&gt;[]&#123;interfaceClass&#125;, new InvocationHandler() &#123;</span><br><span class="line">                @Override</span><br><span class="line">                public Object invoke(Object proxy, Method method, Object[] arguments) throws Throwable &#123;</span><br><span class="line">                    if (client == null)&#123;</span><br><span class="line">                        init();</span><br><span class="line">                    &#125;</span><br><span class="line">                    RpcContent rpcContent = new RpcContent();</span><br><span class="line">                    rpcContent.setClassName(interfaceClass.getName());</span><br><span class="line">                    rpcContent.setMethodName(method.getName());</span><br><span class="line">                    rpcContent.setParameters(arguments);</span><br><span class="line">                    rpcContent.setParameterTypes(method.getParameterTypes());</span><br><span class="line">                    RpcContent rtn = (RpcContent) client.invoke(rpcContent);</span><br><span class="line">                    return rtn.getResult();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端启动类RpcConsumer</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class RpcConsumer &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        HelloService service = RpcClient.refer(HelloService.class);</span><br><span class="line">        System.out.println(service.hello(&quot;World&quot;));</span><br><span class="line">        System.out.println(service.hello(&quot;netty&quot;));</span><br><span class="line">        Thread.sleep(1000);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/03/31/%E7%AE%80%E6%98%93-rpc-%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%B8%89%EF%BC%89-%E4%BD%BF%E7%94%A8-netty-%E5%A4%84%E7%90%86%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82/" data-id="clfw5s3o30001vswga3ey97m6" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rpc/" rel="tag">rpc</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-简易rpc实现（二）-将请求参数封装为对象并序列化" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2023/03/31/%E7%AE%80%E6%98%93rpc%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%BA%8C%EF%BC%89-%E5%B0%86%E8%AF%B7%E6%B1%82%E5%8F%82%E6%95%B0%E5%B0%81%E8%A3%85%E4%B8%BA%E5%AF%B9%E8%B1%A1%E5%B9%B6%E5%BA%8F%E5%88%97%E5%8C%96/" class="article-date">
-  <time datetime="2023-03-31T04:04:23.000Z" itemprop="datePublished">2023-03-31</time>
+  <time datetime="2023-03-31T04:04:00.000Z" itemprop="datePublished">2023-03-31</time>
 </a>
     
   </div>
@@ -107,6 +431,8 @@
       <a data-url="http://example.com/2023/03/31/%E7%AE%80%E6%98%93rpc%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%BA%8C%EF%BC%89-%E5%B0%86%E8%AF%B7%E6%B1%82%E5%8F%82%E6%95%B0%E5%B0%81%E8%A3%85%E4%B8%BA%E5%AF%B9%E8%B1%A1%E5%B9%B6%E5%BA%8F%E5%88%97%E5%8C%96/" data-id="clfw0v2sr00011kwgbykrfu3a" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rpc/" rel="tag">rpc</a></li></ul>
+
     </footer>
   </div>
   
@@ -168,7 +494,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/rpc/" rel="tag">rpc</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rpc/" rel="tag">rpc</a></li></ul>
     </div>
   </div>
 
@@ -178,7 +504,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/rpc/" style="font-size: 10px;">rpc</a>
+      <a href="/tags/jvm/" style="font-size: 20px;">jvm</a> <a href="/tags/rpc/" style="font-size: 10px;">rpc</a>
     </div>
   </div>
 
@@ -200,11 +526,23 @@
       <ul>
         
           <li>
-            <a href="/2023/03/31/%E7%AE%80%E6%98%93rpc%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%BA%8C%EF%BC%89-%E5%B0%86%E8%AF%B7%E6%B1%82%E5%8F%82%E6%95%B0%E5%B0%81%E8%A3%85%E4%B8%BA%E5%AF%B9%E8%B1%A1%E5%B9%B6%E5%BA%8F%E5%88%97%E5%8C%96/">简易rpc实现（二）-将请求参数封装为对象并序列化</a>
+            <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章</a>
           </li>
         
           <li>
-            <a href="/2023/03/31/rpc-1/">简易rpc实现（一）</a>
+            <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC-6-%E7%AB%A0/">&lt;自己动手写 Java 虚拟机&gt; 读书笔记 第 6 章</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC5%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第5章</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC1-4%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第1-4章</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/31/%E7%AE%80%E6%98%93-rpc-%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%B8%89%EF%BC%89-%E4%BD%BF%E7%94%A8-netty-%E5%A4%84%E7%90%86%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82/">简易 rpc 实现（三）- 使用 netty 处理网络请求</a>
           </li>
         
       </ul>
