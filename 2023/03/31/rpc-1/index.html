@@ -5,22 +5,22 @@
   
 
   
-  <title>简易rpc实现（一） | Hexo</title>
+  <title>简易rpc实现（一） | Lyon个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="基本搬运自 https:&#x2F;&#x2F;www.iteye.com&#x2F;blog&#x2F;javatar-1123915 RpcFramework类 主要功能是封装网络请求以及服务端和客户端统一调用协议  12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758pu">
+  <meta name="description" content="基本搬运自 https:&#x2F;&#x2F;www.iteye.com&#x2F;blog&#x2F;javatar-1123915">
 <meta property="og:type" content="article">
 <meta property="og:title" content="简易rpc实现（一）">
 <meta property="og:url" content="http://example.com/2023/03/31/rpc-1/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="基本搬运自 https:&#x2F;&#x2F;www.iteye.com&#x2F;blog&#x2F;javatar-1123915 RpcFramework类 主要功能是封装网络请求以及服务端和客户端统一调用协议  12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758pu">
-<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Lyon个人博客">
+<meta property="og:description" content="基本搬运自 https:&#x2F;&#x2F;www.iteye.com&#x2F;blog&#x2F;javatar-1123915">
+<meta property="og:locale">
 <meta property="article:published_time" content="2023-03-31T02:44:00.000Z">
-<meta property="article:modified_time" content="2023-03-31T04:09:50.995Z">
+<meta property="article:modified_time" content="2023-03-31T09:57:38.805Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="rpc">
 <meta name="twitter:card" content="summary">
   
-    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+    <link rel="alternate" href="/atom.xml" title="Lyon个人博客" type="application/atom+xml">
   
   
     <link rel="icon" href="/favicon.png">
@@ -41,7 +41,7 @@
   <div id="header-outer" class="outer">
     <div id="header-title" class="inner">
       <h1 id="logo-wrap">
-        <a href="/" id="logo">Hexo</a>
+        <a href="/" id="logo">Lyon个人博客</a>
       </h1>
       
     </div>
@@ -90,6 +90,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>基本搬运自 <a target="_blank" rel="noopener" href="https://www.iteye.com/blog/javatar-1123915">https://www.iteye.com/blog/javatar-1123915</a></p>
+<span id="more"></span>
 <p>RpcFramework类 主要功能是封装网络请求以及服务端和客户端统一调用协议<br>  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RpcFramework</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">export</span><span class="params">(<span class="keyword">final</span> Object service, <span class="type">int</span> port)</span> <span class="keyword">throws</span> Exception&#123;</span><br><span class="line">        System.out.println(service.getClass().getName() + <span class="string">&quot; service export &quot;</span>);</span><br><span class="line">        <span class="type">ServerSocket</span> <span class="variable">serverSocket</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ServerSocket</span>(port);</span><br><span class="line">        <span class="keyword">for</span> (;;)&#123;</span><br><span class="line">            <span class="type">Socket</span> <span class="variable">socket</span> <span class="operator">=</span> serverSocket.accept();</span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">Thread</span>(()-&gt;&#123;</span><br><span class="line">                <span class="type">ObjectOutputStream</span> <span class="variable">output</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">                <span class="type">ObjectInputStream</span> <span class="variable">input</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    input = <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(socket.getInputStream());</span><br><span class="line">                    <span class="type">String</span> <span class="variable">methodName</span> <span class="operator">=</span> input.readUTF();</span><br><span class="line">                    Class&lt;?&gt;[] parameterTypes =(Class&lt;?&gt;[]) input.readObject();</span><br><span class="line">                    Object[] arguments = (Object[]) input.readObject();</span><br><span class="line">                    output = <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(socket.getOutputStream());</span><br><span class="line">                    <span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> service.getClass().getMethod(methodName, parameterTypes);</span><br><span class="line">                    <span class="type">Object</span> <span class="variable">object</span> <span class="operator">=</span> method.invoke(service, arguments);</span><br><span class="line">                    output.writeObject(object);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;<span class="keyword">finally</span> &#123;</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        output.close();</span><br><span class="line">                        input.close();</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">                        e.printStackTrace();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;).start();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; T <span class="title function_">refer</span><span class="params">(Class&lt;T&gt; interfaceClass, String host, <span class="type">int</span> port)</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (T) Proxy.newProxyInstance(interfaceClass.getClassLoader(), <span class="keyword">new</span> <span class="title class_">Class</span>&lt;?&gt;[]&#123;interfaceClass&#125;, <span class="keyword">new</span> <span class="title class_">InvocationHandler</span>() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> Object <span class="title function_">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">                <span class="type">ObjectOutputStream</span> <span class="variable">output</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">                <span class="type">ObjectInputStream</span> <span class="variable">input</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="type">Socket</span> <span class="variable">socket</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Socket</span>(host, port);</span><br><span class="line">                    output = <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(socket.getOutputStream());</span><br><span class="line">                    output.writeUTF(method.getName());</span><br><span class="line">                    output.writeObject(method.getParameterTypes());</span><br><span class="line">                    output.writeObject(args);</span><br><span class="line">                    input = <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(socket.getInputStream());</span><br><span class="line">                    <span class="type">Object</span> <span class="variable">o</span> <span class="operator">=</span> input.readObject();</span><br><span class="line">                    <span class="keyword">return</span> o;</span><br><span class="line">                &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                    input.close();</span><br><span class="line">                    output.close();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>定义服务接口<br>  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">HelloService</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">hello</span><span class="params">(String name)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>定义实现类<br>  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HelloServiceImp</span> <span class="keyword">implements</span> <span class="title class_">HelloService</span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">hello</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;hello &quot;</span> + name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>服务提供实现<br>  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RpcProvider</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">HelloServiceImp</span> <span class="variable">service</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HelloServiceImp</span>();</span><br><span class="line">        RpcFramework.export(service,<span class="number">1234</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>服务调用实现<br>  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RpcConsumer</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">        <span class="type">HelloService</span> <span class="variable">service</span> <span class="operator">=</span> RpcFramework.refer(HelloService.class, <span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">1234</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">world</span> <span class="operator">=</span> service.hello(<span class="string">&quot;world1&quot;</span>);</span><br><span class="line">        System.out.println(world);</span><br><span class="line">        Thread.sleep(<span class="number">3000</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 
@@ -117,6 +118,11 @@
     </a>
   
   
+    <a href="/2022/03/31/JVM-gc%E7%9F%A5%E8%AF%86%E7%82%B9%E6%80%BB%E7%BB%93/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">JVM gc知识点总结</div>
+    </a>
+  
 </nav>
 
   
@@ -133,7 +139,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rpc/" rel="tag">rpc</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rpc/" rel="tag">rpc</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
     </div>
   </div>
 
@@ -143,7 +149,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/jvm/" style="font-size: 20px;">jvm</a> <a href="/tags/rpc/" style="font-size: 10px;">rpc</a>
+      <a href="/tags/jvm/" style="font-size: 20px;">jvm</a> <a href="/tags/rpc/" style="font-size: 15px;">rpc</a> <a href="/tags/xv6/" style="font-size: 10px;">xv6</a>
     </div>
   </div>
 
@@ -152,7 +158,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">March 2016</a></li></ul>
     </div>
   </div>
 
@@ -163,6 +169,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2023/03/31/xv6-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E5%AE%9E%E7%8E%B0%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/">xv6 操作系统 实现系统调用</a>
+          </li>
         
           <li>
             <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章</a>
@@ -178,10 +188,6 @@
         
           <li>
             <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC1-4%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第1-4章</a>
-          </li>
-        
-          <li>
-            <a href="/2023/03/31/%E7%AE%80%E6%98%93-rpc-%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%B8%89%EF%BC%89-%E4%BD%BF%E7%94%A8-netty-%E5%A4%84%E7%90%86%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82/">简易 rpc 实现（三）- 使用 netty 处理网络请求</a>
           </li>
         
       </ul>

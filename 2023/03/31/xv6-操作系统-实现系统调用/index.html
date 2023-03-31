@@ -5,15 +5,29 @@
   
 
   
-  <title>Tag: rpc | Lyon个人博客</title>
+  <title>xv6 操作系统 实现系统调用 | Lyon个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyon个人博客">
-<meta property="og:url" content="http://example.com/tags/rpc/index.html">
+  <meta name="description" content="系统调用过程：系统调用需要从用户态转为内核态">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xv6 操作系统 实现系统调用">
+<meta property="og:url" content="http://example.com/2023/03/31/xv6-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E5%AE%9E%E7%8E%B0%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/index.html">
 <meta property="og:site_name" content="Lyon个人博客">
+<meta property="og:description" content="系统调用过程：系统调用需要从用户态转为内核态">
 <meta property="og:locale">
+<meta property="og:image" content="http://example.com/images/pasted-26.png">
+<meta property="og:image" content="http://example.com/images/pasted-27.png">
+<meta property="og:image" content="http://example.com/images/pasted-28.png">
+<meta property="og:image" content="http://example.com/images/pasted-29.png">
+<meta property="og:image" content="http://example.com/images/pasted-30.png">
+<meta property="og:image" content="http://example.com/images/pasted-31.png">
+<meta property="og:image" content="http://example.com/images/pasted-32.png">
+<meta property="og:image" content="http://example.com/images/pasted-33.png">
+<meta property="article:published_time" content="2023-03-31T10:12:00.000Z">
+<meta property="article:modified_time" content="2023-03-31T10:15:52.461Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/pasted-26.png">
   
     <link rel="alternate" href="/atom.xml" title="Lyon个人博客" type="application/atom+xml">
   
@@ -62,78 +76,71 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2023" class="archive-year">2023</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2023/03/31/%E7%AE%80%E6%98%93-rpc-%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%B8%89%EF%BC%89-%E4%BD%BF%E7%94%A8-netty-%E5%A4%84%E7%90%86%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82/" class="archive-article-date">
-  <time datetime="2023-03-31T06:05:00.000Z" itemprop="datePublished">Mar 31</time>
+        <section id="main"><article id="post-xv6-操作系统-实现系统调用" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/03/31/xv6-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E5%AE%9E%E7%8E%B0%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/" class="article-date">
+  <time datetime="2023-03-31T10:12:00.000Z" itemprop="datePublished">2023-03-31</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/03/31/%E7%AE%80%E6%98%93-rpc-%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%B8%89%EF%BC%89-%E4%BD%BF%E7%94%A8-netty-%E5%A4%84%E7%90%86%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82/">简易 rpc 实现（三）- 使用 netty 处理网络请求</a>
+    <h1 class="article-title" itemprop="name">
+      xv6 操作系统 实现系统调用
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2023/03/31/%E7%AE%80%E6%98%93rpc%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%BA%8C%EF%BC%89-%E5%B0%86%E8%AF%B7%E6%B1%82%E5%8F%82%E6%95%B0%E5%B0%81%E8%A3%85%E4%B8%BA%E5%AF%B9%E8%B1%A1%E5%B9%B6%E5%BA%8F%E5%88%97%E5%8C%96/" class="archive-article-date">
-  <time datetime="2023-03-31T04:04:00.000Z" itemprop="datePublished">Mar 31</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/03/31/%E7%AE%80%E6%98%93rpc%E5%AE%9E%E7%8E%B0%EF%BC%88%E4%BA%8C%EF%BC%89-%E5%B0%86%E8%AF%B7%E6%B1%82%E5%8F%82%E6%95%B0%E5%B0%81%E8%A3%85%E4%B8%BA%E5%AF%B9%E8%B1%A1%E5%B9%B6%E5%BA%8F%E5%88%97%E5%8C%96/">简易rpc实现（二）-将请求参数封装为对象并序列化</a>
-    </h1>
-  
+        <p>系统调用过程：系统调用需要从用户态转为内核态</p>
+<span id="more"></span>
+<p>内核态和用户态切换过程：一个进程拥有内核态和用户态的虚拟内存空间。 </p>
+<p><img src="/images/pasted-26.png" alt="upload successful"></p>
+<p>系统调用涉及代码流程，以lab2的trace为例 </p>
+<p><img src="/images/pasted-27.png" alt="upload successful"></p>
+<p>用户态调用trace系统调用，实际是执行usys.S（由usys.pl生成）汇编代码，此处会调用ecall指令</p>
+<p><img src="/images/pasted-28.png" alt="upload successful"></p>
+<p>ecall指令触发一个trap，</p>
+<p><img src="/images/pasted-29.png" alt="upload successful"></p>
+<p>进入usertrap()，转为内核态</p>
+<p><img src="/images/pasted-30.png" alt="upload successful"></p>
+<p>然后执行系统调用</p>
+<p><img src="/images/pasted-31.png" alt="upload successful"></p>
+<p>系统调用返回值存入p-&gt;trapframe-&gt;a0</p>
+<p><img src="/images/pasted-32.png" alt="upload successful"></p>
+<p>返回到用户态</p>
+<p><img src="/images/pasted-33.png" alt="upload successful"></p>
 
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2023/03/31/rpc-1/" class="archive-article-date">
-  <time datetime="2023-03-31T02:44:00.000Z" itemprop="datePublished">Mar 31</time>
-</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2023/03/31/rpc-1/">简易rpc实现（一）</a>
-    </h1>
-  
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/03/31/xv6-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E5%AE%9E%E7%8E%B0%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/" data-id="clfwdyl230005nkwgf65793z9" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
 
-    </header>
+    </footer>
   </div>
-</article>
+  
+    
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">&lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章</div>
+    </a>
   
+</nav>
 
+  
+</article>
 
 </section>
         
