@@ -14,14 +14,14 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="第7章　方法调用和返回    本章主要讨论的问题有实现方法调用，实现方法传参，实现方法返回，PC值的变化。如果对第5章和第6章熟悉的话，本章内容很容易理解。 以A方法调用B方法为例说明以上4个问题。 方法调用指令实现是初始化一个栈帧（B栈帧）然后把栈帧压入栈中，栈顶执行新栈帧。  传参的实现是在A方法调用B方法之前，参数压入A栈帧的操作数栈中，执行调用指令时，A栈帧操作数栈中数据出栈，存入B栈帧的">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="http://example.com/images%5Cpasted-16.png">
-<meta property="og:image" content="http://example.com/images%5Cpasted-17.png">
+<meta property="og:image" content="http://example.com/images/pasted-16.png">
+<meta property="og:image" content="http://example.com/images/pasted-17.png">
 <meta property="article:published_time" content="2023-03-31T06:21:00.000Z">
-<meta property="article:modified_time" content="2023-03-31T06:43:45.293Z">
+<meta property="article:modified_time" content="2023-03-31T06:46:21.881Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="jvm">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images%5Cpasted-16.png">
+<meta name="twitter:image" content="http://example.com/images/pasted-16.png">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -101,7 +101,7 @@
 <li>方法的返回实现是，B栈帧中操作数栈剩下最后一个数为B方法的返回值，返回值压入A栈帧中，栈顶弹出B栈帧，指向A栈帧。</li>
 <li> 在调用方法过程中，PC值会变化，这个问题书中并未详细介绍，可能是作者认为该问题不太重要。由于我比较好奇，所以研究了pc指向值的实现。每个栈帧对象存了一个nextPC的变量，新建栈帧nextPC为0，所以不同栈帧的nextPC值是单独存储的。每次执行指令前都会从当前栈帧中获取nextPC作为新的pc值。</li>
 </ul>
-<p><img src="/images%5Cpasted-16.png" alt="upload successful"></p>
+<p><img src="/images/pasted-16.png" alt="upload successful"></p>
 <p>第8章　数组和字符串  </p>
 <ul>
 <li>本章主要讨论数组和字符串的实现。数组可以看作是一种特殊的类，数组中的值为数组元素，对应类的实例变量。String类有两个实例变量，其中一个是value，类型是字符数组，用于存放UTF16编码后的字符序列。另一个是hash，缓存计字符串的哈希码。</li>
@@ -117,7 +117,7 @@
 上面的方法编译之后，产生下面的字节码：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1  aload_0        // 把局部变量0(this)推入操作数栈顶</span><br><span class="line">2  invokevirtual #4    // 调用tryItOut()方法</span><br><span class="line">4  goto 13        // 如果try&#123;&#125;没有抛出异常， 直接执行return指令</span><br><span class="line">7  astore_1        // 否则， 异常对象引用在操作数栈顶， 把它弹出， 并放入局部变量1</span><br><span class="line">8  aload_0        // 把this推入栈顶(将作为handleExc()方法的参数0)</span><br><span class="line">9  aload_1        // 把异常对象引用推入栈顶(将作为handleExc()方法的参数1)</span><br><span class="line">10  invokevirtual #5    // 调用handleExc()方法</span><br><span class="line">13  return            // 方法返回</span><br></pre></td></tr></table></figure>
 从字节码来看，如果没有异常抛出，则会直接goto到return指令，方法正常返回。那么如果有异常抛出，goto和return之间的指令是如何执行的呢？答案是查找方法的异常处理表。异常处理表是Code属性的一部分，它记录了方法是否有能力处理某种异常。<br>回到catchOne（）方法，它的异常处理表只有如下一项：</li>
 </ul>
-<p><img src="/images%5Cpasted-17.png" alt="upload successful"><br>当tryItOut（）方法通过athrow指令抛出TestExc异常时，Java虚拟机首先会查找tryItOut（）方法的异常处理表，看它能否处理该异常。如果能，则跳转到相应的字节码开始异常处理。假设tryItOut（）方法无法处理异常，Java虚拟机会进一步查看它的调用者，也就是catchOne（）方法的异常处理表。catchOne（）方法刚好可以处理TestExc异常，使catch{}块得以执行。<br>如果遍历完Java虚拟机栈还是找不到异常处理代码，则handleUncaughtException（）函数打印出Java虚拟机栈信息。<br>Java class文件中有个LineNumberTable属性，存在于Code属性中， 它建立了字节码偏移量到源代码行号之间的联系。所以当指令执行抛出异常时可以打印出所有栈帧对应代码的行数。<br>第11章　结束  </p>
+<p><img src="/images/pasted-17.png" alt="upload successful"><br>当tryItOut（）方法通过athrow指令抛出TestExc异常时，Java虚拟机首先会查找tryItOut（）方法的异常处理表，看它能否处理该异常。如果能，则跳转到相应的字节码开始异常处理。假设tryItOut（）方法无法处理异常，Java虚拟机会进一步查看它的调用者，也就是catchOne（）方法的异常处理表。catchOne（）方法刚好可以处理TestExc异常，使catch{}块得以执行。<br>如果遍历完Java虚拟机栈还是找不到异常处理代码，则handleUncaughtException（）函数打印出Java虚拟机栈信息。<br>Java class文件中有个LineNumberTable属性，存在于Code属性中， 它建立了字节码偏移量到源代码行号之间的联系。所以当指令执行抛出异常时可以打印出所有栈帧对应代码的行数。<br>第11章　结束  </p>
 <ul>
 <li>主要讨论了System类的实现</li>
 </ul>
