@@ -64,6 +64,49 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-JVM-gc知识点总结" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2022/03/31/JVM-gc%E7%9F%A5%E8%AF%86%E7%82%B9%E6%80%BB%E7%BB%93/" class="article-date">
+  <time datetime="2022-03-31T10:09:00.000Z" itemprop="datePublished">2022-03-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/03/31/JVM-gc%E7%9F%A5%E8%AF%86%E7%82%B9%E6%80%BB%E7%BB%93/">JVM gc知识点总结</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li><p>如何判断对象是否存活</p>
+<p>Java主要通过可达性分析法判断对象是否存活。可达性分析具体实现是从“GC Roots”作为根节点根据引用关系向下搜索，如果从GC Roots到某个对象不可达时，证明此对象不再被使用。</p>
+        
+          <p class="article-more-link">
+            <a href="/2022/03/31/JVM-gc%E7%9F%A5%E8%AF%86%E7%82%B9%E6%80%BB%E7%BB%93/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/03/31/JVM-gc%E7%9F%A5%E8%AF%86%E7%82%B9%E6%80%BB%E7%BB%93/" data-id="clgc36khr00013wwgba2d9q3b" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-spring-boot自动装配实现逻辑" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2022/03/15/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%AE%9E%E7%8E%B0%E9%80%BB%E8%BE%91/" class="article-date">
@@ -249,7 +292,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rpc/" rel="tag">rpc</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rpc/" rel="tag">rpc</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xxl-job/" rel="tag">xxl-job</a></li></ul>
     </div>
   </div>
 
@@ -259,7 +302,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/jvm/" style="font-size: 20px;">jvm</a> <a href="/tags/rpc/" style="font-size: 15px;">rpc</a> <a href="/tags/xv6/" style="font-size: 10px;">xv6</a>
+      <a href="/tags/jvm/" style="font-size: 20px;">jvm</a> <a href="/tags/rpc/" style="font-size: 15px;">rpc</a> <a href="/tags/xv6/" style="font-size: 10px;">xv6</a> <a href="/tags/xxl-job/" style="font-size: 10px;">xxl-job</a>
     </div>
   </div>
 
@@ -281,6 +324,10 @@
       <ul>
         
           <li>
+            <a href="/2023/04/20/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0-%E6%B3%A8%E5%86%8C/">xxl-job源码分析笔记（一）-注册</a>
+          </li>
+        
+          <li>
             <a href="/2023/04/11/%E7%94%A8chatgpt%E5%AD%A6%E4%B9%A0nlp%EF%BC%88%E4%B8%80%EF%BC%89/">用chatgpt学习nlp（一）</a>
           </li>
         
@@ -294,10 +341,6 @@
         
           <li>
             <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC-6-%E7%AB%A0/">&lt;自己动手写 Java 虚拟机&gt; 读书笔记 第 6 章</a>
-          </li>
-        
-          <li>
-            <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC5%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第5章</a>
           </li>
         
       </ul>
