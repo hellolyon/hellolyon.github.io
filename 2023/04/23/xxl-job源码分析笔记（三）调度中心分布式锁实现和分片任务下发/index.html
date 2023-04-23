@@ -5,29 +5,19 @@
   
 
   
-  <title>xv6 操作系统 实现系统调用 | Lyon个人博客</title>
+  <title>xxl-job源码分析笔记（三）调度中心分布式锁实现和分片任务下发 | Lyon个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="系统调用过程：系统调用需要从用户态转为内核态">
+  <meta name="description" content="xxl-job 调度中心分布式锁和分片任务下发实现比较简单，因此写在一篇内。 xxl-job调度中心的分布式锁简单粗暴地用了个mysql排他锁实现。 1select * from xxl_job_lock where lock_name &#x3D; &amp;#x27;schedule_lock&amp;#x27; for update 具体见 com.xxl.job.admin.core.thread.JobSched">
 <meta property="og:type" content="article">
-<meta property="og:title" content="xv6 操作系统 实现系统调用">
-<meta property="og:url" content="http://example.com/2023/03/31/xv6-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E5%AE%9E%E7%8E%B0%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/index.html">
+<meta property="og:title" content="xxl-job源码分析笔记（三）调度中心分布式锁实现和分片任务下发">
+<meta property="og:url" content="http://example.com/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%B8%89%EF%BC%89%E8%B0%83%E5%BA%A6%E4%B8%AD%E5%BF%83%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E5%AE%9E%E7%8E%B0%E5%92%8C%E5%88%86%E7%89%87%E4%BB%BB%E5%8A%A1%E4%B8%8B%E5%8F%91/index.html">
 <meta property="og:site_name" content="Lyon个人博客">
-<meta property="og:description" content="系统调用过程：系统调用需要从用户态转为内核态">
+<meta property="og:description" content="xxl-job 调度中心分布式锁和分片任务下发实现比较简单，因此写在一篇内。 xxl-job调度中心的分布式锁简单粗暴地用了个mysql排他锁实现。 1select * from xxl_job_lock where lock_name &#x3D; &amp;#x27;schedule_lock&amp;#x27; for update 具体见 com.xxl.job.admin.core.thread.JobSched">
 <meta property="og:locale">
-<meta property="og:image" content="http://example.com/images/pasted-26.png">
-<meta property="og:image" content="http://example.com/images/pasted-27.png">
-<meta property="og:image" content="http://example.com/images/pasted-28.png">
-<meta property="og:image" content="http://example.com/images/pasted-29.png">
-<meta property="og:image" content="http://example.com/images/pasted-30.png">
-<meta property="og:image" content="http://example.com/images/pasted-31.png">
-<meta property="og:image" content="http://example.com/images/pasted-32.png">
-<meta property="og:image" content="http://example.com/images/pasted-33.png">
-<meta property="article:published_time" content="2023-03-31T10:12:00.000Z">
-<meta property="article:modified_time" content="2023-03-31T10:15:52.461Z">
+<meta property="article:published_time" content="2023-04-23T07:13:49.000Z">
+<meta property="article:modified_time" content="2023-04-23T07:13:50.708Z">
 <meta property="article:author" content="John Doe">
-<meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/pasted-26.png">
   
     <link rel="alternate" href="/atom.xml" title="Lyon个人博客" type="application/atom+xml">
   
@@ -76,10 +66,10 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-xv6-操作系统-实现系统调用" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-xxl-job源码分析笔记（三）调度中心分布式锁实现和分片任务下发" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2023/03/31/xv6-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E5%AE%9E%E7%8E%B0%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/" class="article-date">
-  <time datetime="2023-03-31T10:12:00.000Z" itemprop="datePublished">2023-03-31</time>
+    <a href="/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%B8%89%EF%BC%89%E8%B0%83%E5%BA%A6%E4%B8%AD%E5%BF%83%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E5%AE%9E%E7%8E%B0%E5%92%8C%E5%88%86%E7%89%87%E4%BB%BB%E5%8A%A1%E4%B8%8B%E5%8F%91/" class="article-date">
+  <time datetime="2023-04-23T07:13:49.000Z" itemprop="datePublished">2023-04-23</time>
 </a>
     
   </div>
@@ -90,7 +80,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      xv6 操作系统 实现系统调用
+      xxl-job源码分析笔记（三）调度中心分布式锁实现和分片任务下发
     </h1>
   
 
@@ -98,52 +88,29 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>系统调用过程：系统调用需要从用户态转为内核态</p>
-<span id="more"></span>
-<p>内核态和用户态切换过程：一个进程拥有内核态和用户态的虚拟内存空间。 </p>
-<p><img src="/images/pasted-26.png" alt="upload successful"></p>
-<p>系统调用涉及代码流程，以lab2的trace为例 </p>
-<p><img src="/images/pasted-27.png" alt="upload successful"></p>
-<p>用户态调用trace系统调用，实际是执行usys.S（由usys.pl生成）汇编代码，此处会调用ecall指令</p>
-<p><img src="/images/pasted-28.png" alt="upload successful"></p>
-<p>ecall指令触发一个trap，</p>
-<p><img src="/images/pasted-29.png" alt="upload successful"></p>
-<p>进入usertrap()，转为内核态</p>
-<p><img src="/images/pasted-30.png" alt="upload successful"></p>
-<p>然后执行系统调用</p>
-<p><img src="/images/pasted-31.png" alt="upload successful"></p>
-<p>系统调用返回值存入p-&gt;trapframe-&gt;a0</p>
-<p><img src="/images/pasted-32.png" alt="upload successful"></p>
-<p>返回到用户态</p>
-<p><img src="/images/pasted-33.png" alt="upload successful"></p>
+        <p>xxl-job 调度中心分布式锁和分片任务下发实现比较简单，因此写在一篇内。</p>
+<p>xxl-job调度中心的分布式锁简单粗暴地用了个mysql排他锁实现。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> xxl_job_lock <span class="keyword">where</span> lock_name <span class="operator">=</span> <span class="string">&#x27;schedule_lock&#x27;</span> <span class="keyword">for</span> <span class="keyword">update</span></span><br></pre></td></tr></table></figure>
+<p>具体见 com.xxl.job.admin.core.thread.JobScheduleHelper 第73行</p>
+<p>当任务量很大，需要多个执行器并行执行任务时我们可以选择分片广播的路由策略。<br>分片广播的原理很简单，调度中心获取当前注册的执行器一共有多少个，然后在给执行器下发任务的时候多2个参数，一个是注册的执行器总数，一个是当前执行器的序号位。源码位置com.xxl.job.admin.core.trigger.XxlJobTrigger 第79行开始</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> (ExecutorRouteStrategyEnum.SHARDING_BROADCAST==ExecutorRouteStrategyEnum.match(jobInfo.getExecutorRouteStrategy(), <span class="literal">null</span>)</span><br><span class="line">        &amp;&amp; group.getRegistryList()!=<span class="literal">null</span> &amp;&amp; !group.getRegistryList().isEmpty()</span><br><span class="line">        &amp;&amp; shardingParam==<span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; group.getRegistryList().size(); i++) &#123;</span><br><span class="line">        processTrigger(group, jobInfo, finalFailRetryCount, triggerType, i, group.getRegistryList().size());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/03/31/xv6-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E5%AE%9E%E7%8E%B0%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/" data-id="clgc36ki300083wwgf1jm3tq5" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%B8%89%EF%BC%89%E8%B0%83%E5%BA%A6%E4%B8%AD%E5%BF%83%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E5%AE%9E%E7%8E%B0%E5%92%8C%E5%88%86%E7%89%87%E4%BB%BB%E5%8A%A1%E4%B8%8B%E5%8F%91/" data-id="clgt2pr2g0000fcwga6vddru7" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
-
     </footer>
   </div>
   
     
 <nav id="article-nav">
   
-    <a href="/2023/04/11/%E7%94%A8chatgpt%E5%AD%A6%E4%B9%A0nlp%EF%BC%88%E4%B8%80%EF%BC%89/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          用chatgpt学习nlp（一）
-        
-      </div>
-    </a>
   
-  
-    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%BA%8C%EF%BC%89RPC%E8%B0%83%E7%94%A8/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">&lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章</div>
+      <div class="article-nav-title">xxl-job源码分析笔记（二）RPC调用</div>
     </a>
   
 </nav>
