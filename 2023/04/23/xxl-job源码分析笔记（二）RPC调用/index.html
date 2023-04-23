@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>xxl-job源码分析笔记（二）RPC调用 | Lyon个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="xxl-job 的 RPC 调用使用的是http协议，客户端实现是对http client做了简单的封装，服务端实现是基于 Netty做了个HTTP服务端。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xxl-job源码分析笔记（二）RPC调用">
+<meta property="og:url" content="http://example.com/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%BA%8C%EF%BC%89RPC%E8%B0%83%E7%94%A8/index.html">
+<meta property="og:site_name" content="Lyon个人博客">
+<meta property="og:description" content="xxl-job 的 RPC 调用使用的是http协议，客户端实现是对http client做了简单的封装，服务端实现是基于 Netty做了个HTTP服务端。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2023-04-23T03:09:05.000Z">
+<meta property="article:modified_time" content="2023-04-23T03:09:21.060Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Lyon个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Lyon个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-xxl-job源码分析笔记（二）RPC调用" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%BA%8C%EF%BC%89RPC%E8%B0%83%E7%94%A8/" class="article-date">
+  <time datetime="2023-04-23T03:09:05.000Z" itemprop="datePublished">2023-04-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      xxl-job源码分析笔记（二）RPC调用
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>xxl-job 的 RPC 调用使用的是http协议，客户端实现是对http client做了简单的封装，服务端实现是基于 Netty做了个HTTP服务端。</p>
+<span id="more"></span>
+
+
+<p>首先定义了一个接口类，com.xxl.job.core.biz.ExecutorBiz，接口类用于定义实现了哪些rpc方法。客户端和服务端都会实现该接口的方法。摘取其中的run方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> ReturnT&lt;String&gt; <span class="title function_">run</span><span class="params">(TriggerParam triggerParam)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>客户端实现类是 com.xxl.job.core.biz.client.ExecutorBizClient，对http client做了简单的封装，以下摘取其中的run方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> ReturnT&lt;String&gt; <span class="title function_">run</span><span class="params">(TriggerParam triggerParam)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> XxlJobRemotingUtil.postBody(addressUrl + <span class="string">&quot;run&quot;</span>, accessToken, timeout, triggerParam, String.class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>服务端实现从com.xxl.job.core.server.EmbedServer第64行开始</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ServerBootstrap</span> <span class="variable">bootstrap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ServerBootstrap</span>();</span><br><span class="line">bootstrap.group(bossGroup, workerGroup)</span><br><span class="line">        .channel(NioServerSocketChannel.class)</span><br><span class="line">        .childHandler(<span class="keyword">new</span> <span class="title class_">ChannelInitializer</span>&lt;SocketChannel&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">initChannel</span><span class="params">(SocketChannel channel)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">                channel.pipeline()</span><br><span class="line">                        .addLast(<span class="keyword">new</span> <span class="title class_">IdleStateHandler</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">30</span> * <span class="number">3</span>, TimeUnit.SECONDS))  <span class="comment">// beat 3N, close if idle</span></span><br><span class="line">                        .addLast(<span class="keyword">new</span> <span class="title class_">HttpServerCodec</span>())</span><br><span class="line">                        .addLast(<span class="keyword">new</span> <span class="title class_">HttpObjectAggregator</span>(<span class="number">5</span> * <span class="number">1024</span> * <span class="number">1024</span>))  <span class="comment">// merge request &amp; reponse to FULL</span></span><br><span class="line">                        .addLast(<span class="keyword">new</span> <span class="title class_">EmbedHttpServerHandler</span>(executorBiz, accessToken, bizThreadPool));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">        .childOption(ChannelOption.SO_KEEPALIVE, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// bind</span></span><br><span class="line"><span class="type">ChannelFuture</span> <span class="variable">future</span> <span class="operator">=</span> bootstrap.bind(port).sync();</span><br></pre></td></tr></table></figure>
+<p>其中最重要的是EmbedHttpServerHandler部分，是处理客户端请求的逻辑。</p>
+<p>以下为com.xxl.job.core.server.EmbedServer.EmbedHttpServerHandler#channelRead0方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">channelRead0</span><span class="params">(<span class="keyword">final</span> ChannelHandlerContext ctx, FullHttpRequest msg)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">// request parse</span></span><br><span class="line">    <span class="comment">//final byte[] requestBytes = ByteBufUtil.getBytes(msg.content());    // byteBuf.toString(io.netty.util.CharsetUtil.UTF_8);</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">requestData</span> <span class="operator">=</span> msg.content().toString(CharsetUtil.UTF_8);</span><br><span class="line">    <span class="type">String</span> <span class="variable">uri</span> <span class="operator">=</span> msg.uri();</span><br><span class="line">    <span class="type">HttpMethod</span> <span class="variable">httpMethod</span> <span class="operator">=</span> msg.method();</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">keepAlive</span> <span class="operator">=</span> HttpUtil.isKeepAlive(msg);</span><br><span class="line">    <span class="type">String</span> <span class="variable">accessTokenReq</span> <span class="operator">=</span> msg.headers().get(XxlJobRemotingUtil.XXL_JOB_ACCESS_TOKEN);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// invoke</span></span><br><span class="line">    bizThreadPool.execute(<span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="comment">// do invoke</span></span><br><span class="line">            <span class="type">Object</span> <span class="variable">responseObj</span> <span class="operator">=</span> process(httpMethod, uri, requestData, accessTokenReq);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// to json</span></span><br><span class="line">            <span class="type">String</span> <span class="variable">responseJson</span> <span class="operator">=</span> GsonTool.toJson(responseObj);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// write response</span></span><br><span class="line">            writeResponse(ctx, keepAlive, responseJson);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>继续看com.xxl.job.core.server.EmbedServer.EmbedHttpServerHandler#process方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">private</span> Object <span class="title function_">process</span><span class="params">(HttpMethod httpMethod, String uri, String requestData, String accessTokenReq)</span> &#123;</span><br><span class="line">    <span class="comment">// valid</span></span><br><span class="line">    <span class="keyword">if</span> (HttpMethod.POST != httpMethod) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ReturnT</span>&lt;String&gt;(ReturnT.FAIL_CODE, <span class="string">&quot;invalid request, HttpMethod not support.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (uri == <span class="literal">null</span> || uri.trim().length() == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ReturnT</span>&lt;String&gt;(ReturnT.FAIL_CODE, <span class="string">&quot;invalid request, uri-mapping empty.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (accessToken != <span class="literal">null</span></span><br><span class="line">            &amp;&amp; accessToken.trim().length() &gt; <span class="number">0</span></span><br><span class="line">            &amp;&amp; !accessToken.equals(accessTokenReq)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ReturnT</span>&lt;String&gt;(ReturnT.FAIL_CODE, <span class="string">&quot;The access token is wrong.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// services mapping</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">switch</span> (uri) &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">&quot;/beat&quot;</span>:</span><br><span class="line">                <span class="keyword">return</span> executorBiz.beat();</span><br><span class="line">            <span class="keyword">case</span> <span class="string">&quot;/idleBeat&quot;</span>:</span><br><span class="line">                <span class="type">IdleBeatParam</span> <span class="variable">idleBeatParam</span> <span class="operator">=</span> GsonTool.fromJson(requestData, IdleBeatParam.class);</span><br><span class="line">                <span class="keyword">return</span> executorBiz.idleBeat(idleBeatParam);</span><br><span class="line">            <span class="keyword">case</span> <span class="string">&quot;/run&quot;</span>:</span><br><span class="line">                <span class="type">TriggerParam</span> <span class="variable">triggerParam</span> <span class="operator">=</span> GsonTool.fromJson(requestData, TriggerParam.class);</span><br><span class="line">                <span class="keyword">return</span> executorBiz.run(triggerParam);</span><br><span class="line">            <span class="keyword">case</span> <span class="string">&quot;/kill&quot;</span>:</span><br><span class="line">                <span class="type">KillParam</span> <span class="variable">killParam</span> <span class="operator">=</span> GsonTool.fromJson(requestData, KillParam.class);</span><br><span class="line">                <span class="keyword">return</span> executorBiz.kill(killParam);</span><br><span class="line">            <span class="keyword">case</span> <span class="string">&quot;/log&quot;</span>:</span><br><span class="line">                <span class="type">LogParam</span> <span class="variable">logParam</span> <span class="operator">=</span> GsonTool.fromJson(requestData, LogParam.class);</span><br><span class="line">                <span class="keyword">return</span> executorBiz.log(logParam);</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ReturnT</span>&lt;String&gt;(ReturnT.FAIL_CODE, <span class="string">&quot;invalid request, uri-mapping(&quot;</span> + uri + <span class="string">&quot;) not found.&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(e.getMessage(), e);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ReturnT</span>&lt;String&gt;(ReturnT.FAIL_CODE, <span class="string">&quot;request error:&quot;</span> + ThrowableUtil.toString(e));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>服务端写死了几个url服务，实现简单的rpc服务调用。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%BA%8C%EF%BC%89RPC%E8%B0%83%E7%94%A8/" data-id="clgstzddm00009swgd1pb591x" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/04/20/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0-%E6%B3%A8%E5%86%8C/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">xxl-job源码分析笔记（一）-注册</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/rpc/" rel="tag">rpc</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xxl-job/" rel="tag">xxl-job</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/jvm/" style="font-size: 20px;">jvm</a> <a href="/tags/rpc/" style="font-size: 15px;">rpc</a> <a href="/tags/xv6/" style="font-size: 10px;">xv6</a> <a href="/tags/xxl-job/" style="font-size: 10px;">xxl-job</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">March 2016</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%BA%8C%EF%BC%89RPC%E8%B0%83%E7%94%A8/">xxl-job源码分析笔记（二）RPC调用</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/20/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0-%E6%B3%A8%E5%86%8C/">xxl-job源码分析笔记（一）-注册</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/11/%E7%94%A8chatgpt%E5%AD%A6%E4%B9%A0nlp%EF%BC%88%E4%B8%80%EF%BC%89/">用chatgpt学习nlp（一）</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/31/xv6-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E5%AE%9E%E7%8E%B0%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/">xv6 操作系统 实现系统调用</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/">&lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2023 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
