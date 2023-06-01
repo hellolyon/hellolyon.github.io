@@ -64,6 +64,46 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-spring-boot自动装配实现逻辑" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2022/03/15/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%AE%9E%E7%8E%B0%E9%80%BB%E8%BE%91/" class="article-date">
+  <time datetime="2022-03-15T10:09:00.000Z" itemprop="datePublished">2022-03-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/03/15/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%AE%9E%E7%8E%B0%E9%80%BB%E8%BE%91/">spring boot自动装配实现逻辑</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>@SpringBootApplication注解中包含@EnableAutoConfiguration注解。</p>
+<p>@EnableAutoConfiguration注解的作用主要是读取所有加载的jar包下META-INF/spring.factories文件，spring.factories文件中有配置类的class路径。找到对应class后，一般class有@Configuration注解，表示是一个配置类。同时还有一个@ConditionalOnxxx的配置，表示当满足xxx条件的时候才加载该类。</p>
+<p>通过这种方式实现自动装配，比如当maven中加了mysql包依赖时，spring自动加载mysql相关bean；加了pgsql依赖时，spring自动加载pgsql相关bean。</p>
+<p>具体实现参考  <a target="_blank" rel="noopener" href="https://www.cnblogs.com/monkey-xuan/p/15693746.html">https://www.cnblogs.com/monkey-xuan/p/15693746.html</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/03/15/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%AE%9E%E7%8E%B0%E9%80%BB%E8%BE%91/" data-id="clgc36ki000053wwg6h1gfzhc" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-ReentrantLock源码学习总结" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2021/03/31/ReentrantLock%E6%BA%90%E7%A0%81%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/" class="article-date">
@@ -228,7 +268,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">March 2016</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">March 2016</a></li></ul>
     </div>
   </div>
 
@@ -239,6 +279,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2023/06/01/http-client-%E8%BF%9E%E6%8E%A5%E6%B1%A0%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">http client 连接池源码分析</a>
+          </li>
         
           <li>
             <a href="/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E5%9B%9B%EF%BC%89%E6%89%A7%E8%A1%8C%E5%99%A8%E5%BC%82%E6%AD%A5%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1%E5%B9%B6%E5%9B%9E%E8%B0%83%E8%B0%83%E5%BA%A6%E4%B8%AD%E5%BF%83/">xxl-job源码分析笔记（四）执行器异步执行任务并回调调度中心</a>
@@ -254,10 +298,6 @@
         
           <li>
             <a href="/2023/04/20/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0-%E6%B3%A8%E5%86%8C/">xxl-job源码分析笔记（一）-注册</a>
-          </li>
-        
-          <li>
-            <a href="/2023/04/11/%E7%94%A8chatgpt%E5%AD%A6%E4%B9%A0nlp%EF%BC%88%E4%B8%80%EF%BC%89/">用chatgpt学习nlp（一）</a>
           </li>
         
       </ul>
