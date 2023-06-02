@@ -64,6 +64,52 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-InheritableThreadLocal实现原理" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/06/02/InheritableThreadLocal%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="article-date">
+  <time datetime="2023-06-02T03:02:31.000Z" itemprop="datePublished">2023-06-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/06/02/InheritableThreadLocal%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">InheritableThreadLocal实现原理</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>写个测试用例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">InheritableThreadLocalTest</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">        InheritableThreadLocal&lt;String&gt; threadLocal = <span class="keyword">new</span> <span class="title class_">InheritableThreadLocal</span>&lt;&gt;();</span><br><span class="line">        threadLocal.set(<span class="string">&quot;hello&quot;</span>);</span><br><span class="line">        <span class="type">ExecutorService</span> <span class="variable">executorService</span> <span class="operator">=</span> Executors.newFixedThreadPool(<span class="number">1</span>);</span><br><span class="line">        CompletableFuture.runAsync(</span><br><span class="line">                () -&gt; &#123;</span><br><span class="line">                    log.info(threadLocal.get());</span><br><span class="line">                &#125;</span><br><span class="line">                , executorService);</span><br><span class="line">        threadLocal.set(<span class="string">&quot;world&quot;</span>);</span><br><span class="line"></span><br><span class="line">        CompletableFuture.runAsync(</span><br><span class="line">                () -&gt; &#123;</span><br><span class="line">                    log.info(threadLocal.get());</span><br><span class="line">                &#125;</span><br><span class="line">                , executorService);</span><br><span class="line">        CompletableFuture.runAsync(</span><br><span class="line">                () -&gt; &#123;</span><br><span class="line">                    log.info(threadLocal.get());</span><br><span class="line">                &#125;</span><br><span class="line">                , Executors.newFixedThreadPool(<span class="number">1</span>));</span><br><span class="line">        log.info(threadLocal.get());</span><br><span class="line">        Thread.sleep(<span class="number">10000</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以下为输出日志</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2023</span>-<span class="number">06</span>-<span class="number">02</span> <span class="number">10</span>:<span class="number">44</span>:<span class="number">35.688</span>  INFO   --- [pool-<span class="number">2</span>-thread-<span class="number">1</span>] c.e.d.t.InheritableThreadLocalTest       : world</span><br><span class="line"><span class="number">2023</span>-<span class="number">06</span>-<span class="number">02</span> <span class="number">10</span>:<span class="number">44</span>:<span class="number">35.688</span>  INFO   --- [           main] c.e.d.t.InheritableThreadLocalTest       : world</span><br><span class="line"><span class="number">2023</span>-<span class="number">06</span>-<span class="number">02</span> <span class="number">10</span>:<span class="number">44</span>:<span class="number">35.688</span>  INFO   --- [pool-<span class="number">1</span>-thread-<span class="number">1</span>] c.e.d.t.InheritableThreadLocalTest       : hello</span><br><span class="line"><span class="number">2023</span>-<span class="number">06</span>-<span class="number">02</span> <span class="number">10</span>:<span class="number">44</span>:<span class="number">35.694</span>  INFO   --- [pool-<span class="number">1</span>-thread-<span class="number">1</span>] c.e.d.t.InheritableThreadLocalTest       : hello</span><br></pre></td></tr></table></figure>
+
+<p>可以看到InheritableThreadLocal只在创建线程时将InheritableThreadLocal值从父线程传递到子线程。</p>
+<p>查看java.lang.Thread类源代码，可以看到有2个和ThreadLocal相关的变量</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ThreadLocal.<span class="type">ThreadLocalMap</span> <span class="variable">threadLocals</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">ThreadLocal.<span class="type">ThreadLocalMap</span> <span class="variable">inheritableThreadLocals</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br></pre></td></tr></table></figure>
+<p>值传递是在java.lang.Thread#init(java.lang.ThreadGroup, java.lang.Runnable, java.lang.String, long, java.security.AccessControlContext, boolean)方法中实现，所以只在创建线程时传递值</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(ThreadGroup g, Runnable target, String name,</span></span><br><span class="line"><span class="params">                  <span class="type">long</span> stackSize, AccessControlContext acc,</span></span><br><span class="line"><span class="params">                  <span class="type">boolean</span> inheritThreadLocals)</span> &#123;</span><br><span class="line">    <span class="comment">// 省略</span></span><br><span class="line">    <span class="keyword">if</span> (inheritThreadLocals &amp;&amp; parent.inheritableThreadLocals != <span class="literal">null</span>)</span><br><span class="line">        <span class="comment">//父线程InheritableThreadLocal有值的情况下子线程进行复制</span></span><br><span class="line">        <span class="built_in">this</span>.inheritableThreadLocals =</span><br><span class="line">            ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);</span><br><span class="line">    <span class="comment">// 省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/06/02/InheritableThreadLocal%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" data-id="clidzcmeh0000yswgb1mfbiyv" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-TheadLocal内存泄漏及原理分析" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2023/06/01/TheadLocal%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E5%8F%8A%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" class="article-date">
@@ -269,52 +315,11 @@
 
 
   
-    <article id="post-xxl-job源码分析笔记（二）RPC调用" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%BA%8C%EF%BC%89RPC%E8%B0%83%E7%94%A8/" class="article-date">
-  <time datetime="2023-04-23T03:09:05.000Z" itemprop="datePublished">2023-04-23</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%BA%8C%EF%BC%89RPC%E8%B0%83%E7%94%A8/">xxl-job源码分析笔记（二）RPC调用</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>xxl-job 的 RPC 调用使用的是http协议，客户端实现是对http client做了简单的封装，服务端实现是基于 Netty做了个HTTP服务端。</p>
-        
-          <p class="article-more-link">
-            <a href="/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%BA%8C%EF%BC%89RPC%E8%B0%83%E7%94%A8/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%BA%8C%EF%BC%89RPC%E8%B0%83%E7%94%A8/" data-id="clgstzddm00009swgd1pb591x" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
 
 
   <nav id="page-nav">
     
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
   </nav>
 
 </section>
@@ -367,6 +372,10 @@
       <ul>
         
           <li>
+            <a href="/2023/06/02/InheritableThreadLocal%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">InheritableThreadLocal实现原理</a>
+          </li>
+        
+          <li>
             <a href="/2023/06/01/TheadLocal%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E5%8F%8A%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/">TheadLocal内存泄漏及原理分析</a>
           </li>
         
@@ -380,10 +389,6 @@
         
           <li>
             <a href="/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%B8%89%EF%BC%89%E8%B0%83%E5%BA%A6%E4%B8%AD%E5%BF%83%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E5%AE%9E%E7%8E%B0%E5%92%8C%E5%88%86%E7%89%87%E4%BB%BB%E5%8A%A1%E4%B8%8B%E5%8F%91/">xxl-job源码分析笔记（三）调度中心分布式锁实现和分片任务下发</a>
-          </li>
-        
-          <li>
-            <a href="/2023/04/23/xxl-job%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E7%AC%94%E8%AE%B0%EF%BC%88%E4%BA%8C%EF%BC%89RPC%E8%B0%83%E7%94%A8/">xxl-job源码分析笔记（二）RPC调用</a>
           </li>
         
       </ul>
