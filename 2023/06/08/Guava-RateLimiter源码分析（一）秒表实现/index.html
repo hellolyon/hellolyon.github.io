@@ -5,31 +5,21 @@
   
 
   
-  <title>&lt;自己动手写 Java 虚拟机&gt; 读书笔记 第 6 章 | Lyon个人博客</title>
+  <title>Guava RateLimiter源码分析（一）秒表实现 | Lyon个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="第6章　类和对象 本章主要讲解了执行引擎实现类和对象的原理，详细说明了虚拟机加载类和创建对象的详细步骤。">
+  <meta name="description" content="Guava包的RateLimiter实现了限流功能，以下为测试代码">
 <meta property="og:type" content="article">
-<meta property="og:title" content="&lt;自己动手写 Java 虚拟机&gt; 读书笔记 第 6 章">
-<meta property="og:url" content="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC-6-%E7%AB%A0/index.html">
+<meta property="og:title" content="Guava RateLimiter源码分析（一）秒表实现">
+<meta property="og:url" content="http://example.com/2023/06/08/Guava-RateLimiter%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89%E7%A7%92%E8%A1%A8%E5%AE%9E%E7%8E%B0/index.html">
 <meta property="og:site_name" content="Lyon个人博客">
-<meta property="og:description" content="第6章　类和对象 本章主要讲解了执行引擎实现类和对象的原理，详细说明了虚拟机加载类和创建对象的详细步骤。">
+<meta property="og:description" content="Guava包的RateLimiter实现了限流功能，以下为测试代码">
 <meta property="og:locale">
-<meta property="og:image" content="http://example.com/images/pasted-6.png">
-<meta property="og:image" content="http://example.com/images/pasted-7.png">
-<meta property="og:image" content="http://example.com/images/pasted-8.png">
-<meta property="og:image" content="http://example.com/images/pasted-9.png">
-<meta property="og:image" content="http://example.com/images/pasted-10.png">
-<meta property="og:image" content="http://example.com/images/pasted-11.png">
-<meta property="og:image" content="http://example.com/images/pasted-12.png">
-<meta property="og:image" content="http://example.com/images/pasted-13.png">
-<meta property="og:image" content="http://example.com/images/pasted-14.png">
-<meta property="og:image" content="http://example.com/images/pasted-15.png">
-<meta property="article:published_time" content="2023-03-31T06:18:00.000Z">
-<meta property="article:modified_time" content="2023-03-31T09:56:57.396Z">
+<meta property="article:published_time" content="2023-06-08T09:10:00.000Z">
+<meta property="article:modified_time" content="2023-06-08T12:37:09.490Z">
 <meta property="article:author" content="John Doe">
-<meta property="article:tag" content="jvm">
+<meta property="article:tag" content="RateLimiter">
+<meta property="article:tag" content="guava">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/pasted-6.png">
   
     <link rel="alternate" href="/atom.xml" title="Lyon个人博客" type="application/atom+xml">
   
@@ -78,10 +68,10 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-自己动手写-Java-虚拟机-读书笔记-第-6-章" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-Guava-RateLimiter源码分析（一）秒表实现" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC-6-%E7%AB%A0/" class="article-date">
-  <time datetime="2023-03-31T06:18:00.000Z" itemprop="datePublished">2023-03-31</time>
+    <a href="/2023/06/08/Guava-RateLimiter%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89%E7%A7%92%E8%A1%A8%E5%AE%9E%E7%8E%B0/" class="article-date">
+  <time datetime="2023-06-08T09:10:00.000Z" itemprop="datePublished">2023-06-08</time>
 </a>
     
   </div>
@@ -92,7 +82,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      &lt;自己动手写 Java 虚拟机&gt; 读书笔记 第 6 章
+      Guava RateLimiter源码分析（一）秒表实现
     </h1>
   
 
@@ -100,45 +90,29 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>第6章　类和对象</p>
-<p>本章主要讲解了执行引擎实现类和对象的原理，详细说明了虚拟机加载类和创建对象的详细步骤。</p>
+        <p>Guava包的RateLimiter实现了限流功能，以下为测试代码</p>
 <span id="more"></span>
-<p>加载类步骤</p>
-<p>1.从命令行或配置中获取main函数所在的类，解析该类信息解析，获取父类信息并将父类信息存储在classload的classMap中（如果父类还有父类则循环加载父类的父类），key为类名，vlaue为类对象。直到所有关联的父类被全部存入classMap。相关代码ch06/rtda/heap/class_loader.go:26</p>
-<p>书中例子 jvmgo.book.ch06.MyObject 被加载后classMap中存储为</p>
-<p><img src="/images/pasted-6.png" alt="upload successful"></p>
-<p>2.link链接</p>
-<p>类加载后执行链接，书中未实现验证功能，只实现了准备功能。相关代码 ch06/rtda/heap/class_loader.go:86</p>
-<p>准备功能主要是计算类的实例变量和静态变量需要占用的slot数，并初始化静态变量。书中jvmgo/book/ch06/MyObject链接后instanceSlotCount（实例变量占用slot计数）和staticSlotCount（静态变量占用slot计数）如截图</p>
-<p><img src="/images/pasted-7.png" alt="upload successful"></p>
-<p>jvmgo/book/ch06/MyObject的Java源代码为</p>
-<p><img src="/images/pasted-8.png" alt="upload successful"></p>
-<p>3.解析，解析是指将常量池内的符号引用解析成为直接引用。 加载类首先将类中的常量池信息转为运行时常量池相关代码ch06/rtda/heap/constant_pool.go:13</p>
-<p>当用到常量池中的引用时，符号引用转为直接引用ch06/rtda/heap/cp_symref.go:18</p>
-<p>以jvmgo/book/ch06/MyObject在常量池的引用为例</p>
-<p>在加载类的过程中调用ch06/rtda/heap/constant_pool.go的newConstantPool方法创建运行时常量池，运行时常量池存储内容和类文件中对应。</p>
-<p><img src="/images/pasted-9.png" alt="upload successful"></p>
-<p>常量池信息中下标为3的数据存储jvmgo/book/ch06/MyObject类的引用。程序中运行常量池数组下标为3的数据同样存储jvmgo/book/ch06/MyObject类的引用，此时存储的是符号引用，还未指向MyObject类在内存中具体地址。如下图cp.consts[3].class指向nil</p>
-<p><img src="/images/pasted-10.png" alt="upload successful"></p>
-<p>当程序要引用jvmgo/book/ch06/MyObject时，会判断class是否为空，如果为空则尝试在classMap获取class的直接引用，如果classMap中没有则尝试加载，如果加载不到则报错。</p>
-<p>1.判断class是否为空</p>
-<p><img src="/images/pasted-11.png" alt="upload successful"></p>
-<p>2.在classMap中查找</p>
-<p><img src="/images/pasted-12.png" alt="upload successful"></p>
-<p><img src="/images/pasted-13.png" alt="upload successful"></p>
-<p>3.classMap中没有则尝试加载，如上图第32行代码。</p>
-<p>new指令的实现:new指令后面的操作数是常量池数据下标，书中例子值为3，对应jvmgo/book/ch06/MyObject类。</p>
-<p><img src="/images/pasted-14.png" alt="upload successful"></p>
-<p>程序解析获得jvmgo/book/ch06/MyObject类的直接引用后调用NewObject方法（代码：ch06/rtda/heap/class.go:97）。NewObject方法创建一个Object对象，Object对象存储实例数据和Class引用。</p>
-<p><img src="/images/pasted-15.png" alt="upload successful"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">GuavaRateLimiter</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">RateLimiter</span> <span class="variable">limiter</span> <span class="operator">=</span> RateLimiter.create(<span class="number">5</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">20</span>; i++) &#123;</span><br><span class="line">            limiter.acquire();</span><br><span class="line">            log.info(Integer.toString(i));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>com.google.common.util.concurrent.RateLimiter#create(double)方法，传入的值是每秒能通过几个请求。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> RateLimiter <span class="title function_">create</span><span class="params">(<span class="type">double</span> permitsPerSecond)</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> create(permitsPerSecond, SleepingStopwatch.createFromSystemTimer());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>更细的com.google.common.util.concurrent.RateLimiter#create(double, com.google.common.util.concurrent.RateLimiter.SleepingStopwatch)方法传入一个SleepingStopwatch对象，SleepingStopwatch对象是指秒表，用来计算时间间隔。</p>
+<p>SleepingStopwatch对象中有个Ticker对象，Ticker类的com.google.common.base.Ticker#read方法用来获取当前的相对时间，主要用System.nanoTime()实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">long</span> <span class="title function_">read</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> System.nanoTime();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关于为什么System.currentTimeMillis()接口实现，查了下资料，总结如下</p>
+<p>使用自己实现的秒表功能的主要原因是为了准确度和性能。Guava团队认为，使用系统提供的时间函数（例如<code>System.currentTimeMillis()</code>）来测量时间的精确度和性能可能不足以满足RateLimiter的要求。系统时间函数的调用开销相对较高，并且可能存在一些不确定性和误差。</p>
+<p>System.currentTimeMillis()使用的是系统墙上时钟（wall-clock time），它是系统时钟的实际时间，可能受到时钟偏差和调整的影响。而System.nanoTime()使用的是一个相对的时间源，它通常是由操作系统提供的高精度计时器。</p>
+<p>墙上时钟通常由操作系统通过与外部时间源（例如网络时间协议NTP服务器）同步来获取。操作系统会维护一个计算机内部的系统时钟，该时钟不断更新以反映当前的墙上时钟。墙上时钟的精确度可能会受到多种因素的影响，包括时钟漂移、调整和同步延迟等。因此，在需要高精确度时间测量的场景下，可能需要使用更高精度的时间源（如<code>System.nanoTime()</code>）来进行测量。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99-Java-%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC-6-%E7%AB%A0/" data-id="clgc36kia000f3wwg15jw04eq" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/06/08/Guava-RateLimiter%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89%E7%A7%92%E8%A1%A8%E5%AE%9E%E7%8E%B0/" data-id="clin4no2k0000xcwg7u24ajmv" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jvm/" rel="tag">jvm</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RateLimiter/" rel="tag">RateLimiter</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/guava/" rel="tag">guava</a></li></ul>
 
     </footer>
   </div>
@@ -146,19 +120,19 @@
     
 <nav id="article-nav">
   
-    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC7-11%E7%AB%A0/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2023/06/08/Guava-RateLimiter%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E4%BA%8C%EF%BC%89%E6%99%AE%E9%80%9A%E9%99%90%E6%B5%81SmoothBursty%E5%AE%9E%E7%8E%B0/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          &lt;自己动手写Java虚拟机&gt;读书笔记 第7-11章
+          Guava RateLimiter源码分析（二）普通限流SmoothBursty实现
         
       </div>
     </a>
   
   
-    <a href="/2023/03/31/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99Java%E8%99%9A%E6%8B%9F%E6%9C%BA-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E7%AC%AC5%E7%AB%A0/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2023/06/04/logback-mdc%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">&lt;自己动手写Java虚拟机&gt;读书笔记 第5章</div>
+      <div class="article-nav-title">logback mdc源码分析</div>
     </a>
   
 </nav>
