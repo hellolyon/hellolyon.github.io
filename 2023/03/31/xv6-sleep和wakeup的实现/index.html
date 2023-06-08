@@ -5,15 +5,24 @@
   
 
   
-  <title>Archives: 2022/3 | Lyon个人博客</title>
+  <title>xv6 sleep和wakeup的实现 | Lyon个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Lyon个人博客">
-<meta property="og:url" content="http://example.com/archives/2022/03/index.html">
+  <meta name="description" content="xv6-book书中对sleep和wakeup的实现进行了很详细而且精彩的描述。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xv6 sleep和wakeup的实现">
+<meta property="og:url" content="http://example.com/2023/03/31/xv6-sleep%E5%92%8Cwakeup%E7%9A%84%E5%AE%9E%E7%8E%B0/index.html">
 <meta property="og:site_name" content="Lyon个人博客">
+<meta property="og:description" content="xv6-book书中对sleep和wakeup的实现进行了很详细而且精彩的描述。">
 <meta property="og:locale">
+<meta property="og:image" content="http://example.com/images/pasted-34.png">
+<meta property="og:image" content="http://example.com/images/pasted-35.png">
+<meta property="og:image" content="http://example.com/images/pasted-36.png">
+<meta property="article:published_time" content="2023-03-31T10:14:00.000Z">
+<meta property="article:modified_time" content="2023-06-08T12:41:56.809Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="xv6">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/pasted-34.png">
   
     <link rel="alternate" href="/atom.xml" title="Lyon个人博客" type="application/atom+xml">
   
@@ -62,59 +71,73 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2022" class="archive-year">2022</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2022/03/31/JVM-gc%E7%9F%A5%E8%AF%86%E7%82%B9%E6%80%BB%E7%BB%93/" class="archive-article-date">
-  <time datetime="2022-03-31T10:09:00.000Z" itemprop="datePublished">Mar 31</time>
+        <section id="main"><article id="post-xv6-sleep和wakeup的实现" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/03/31/xv6-sleep%E5%92%8Cwakeup%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="article-date">
+  <time datetime="2023-03-31T10:14:00.000Z" itemprop="datePublished">2023-03-31</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2022/03/31/JVM-gc%E7%9F%A5%E8%AF%86%E7%82%B9%E6%80%BB%E7%BB%93/">JVM gc知识点总结</a>
+    <h1 class="article-title" itemprop="name">
+      xv6 sleep和wakeup的实现
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2022/03/15/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%AE%9E%E7%8E%B0%E9%80%BB%E8%BE%91/" class="archive-article-date">
-  <time datetime="2022-03-15T10:09:00.000Z" itemprop="datePublished">Mar 15</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2022/03/15/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%AE%9E%E7%8E%B0%E9%80%BB%E8%BE%91/">spring boot自动装配实现逻辑</a>
-    </h1>
-  
+        <p>xv6-book书中对sleep和wakeup的实现进行了很详细而且精彩的描述。</p>
+<span id="more"></span>
+<ul>
+<li>sleep和wakeup要解决什么问题<br>假如我们有一个生产者消费者模式的代码，生产者往ptr中写入数据，消费者从ptr中读取数据。</li>
+</ul>
+<p><img src="/images/pasted-34.png" alt="upload successful"></p>
+<p><img src="/images/pasted-35.png" alt="upload successful"><br>加入</p>
+<p>通过查手册（xv6-book）可以知道sleep代码位置</p>
+<p>Xv6’s sleep (kernel/proc.c:529) and wakeup (kernel/proc.c:560) </p>
+<p>xv6中的sleep有点像Java中的wait，在xv6-book书中描述了生产者消费者模式中，使用sleep和wakeup方式可以减少自旋锁对cpu无意义的损耗。在使用sleep的过程中有一个“lost wake-up”问题，就是指一个调用wakeup的线程在sleep线程调用sleep之前调用的wakeup，导致wakeup丢失。要解决这个问题需要引入同步机制，在xv6中通过</p>
+<p><img src="/images/pasted-36.png" alt="upload successful"></p>
 
-    </header>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/03/31/xv6-sleep%E5%92%8Cwakeup%E7%9A%84%E5%AE%9E%E7%8E%B0/" data-id="clin4oyfc0000dcwgh90788eh" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xv6/" rel="tag">xv6</a></li></ul>
+
+    </footer>
   </div>
-</article>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/04/11/%E7%94%A8chatgpt%E5%AD%A6%E4%B9%A0nlp%EF%BC%88%E4%B8%80%EF%BC%89/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          用chatgpt学习nlp（一）
+        
+      </div>
+    </a>
   
   
-    </div></section>
+    <a href="/2023/03/31/xv6-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E5%AE%9E%E7%8E%B0%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">xv6 操作系统 实现系统调用</div>
+    </a>
   
+</nav>
 
+  
+</article>
 
 </section>
         
